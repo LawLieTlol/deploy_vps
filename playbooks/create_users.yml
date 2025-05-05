@@ -1,0 +1,44 @@
+- name: Создание локальных пользователей
+  hosts: vps
+  become: true
+  vars:
+    ansible_user: root
+  tasks:
+    - name: "Создаём локальных пользователей"
+      user:
+        name: "{{ item }}"
+        state: present
+        expires: -1
+        shell: /bin/bash
+      loop: 
+        - "{{ deploy_user }}"
+        - "{{ wireguard_user}}"
+    - name: "Создаём директорию для SSH ключей пользователя {{ deploy_user }}"
+      file:
+        dest: "/home/{{ deploy_user }}/.ssh"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: '0700'
+    - name: "Копируем SSH ключ из root в {{ deploy_user }}"
+      copy:
+        src: /root/.ssh/authorized_keys
+        dest: "/home/{{ deploy_user }}/.ssh/authorized_keys"
+        remote_src: true
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: '0644'
+    - name: "Установка sudo"
+      apt:
+        name: sudo
+        state: present
+        update_cache: yes
+      register: sudo_result
+    - name: "Настройка sudoers для deploy_user"
+      lineinfile:
+        path: /etc/sudoers.d/{{ deploy_user }}
+        line: "{{ deploy_user }} ALL=(ALL) NOPASSWD: ALL"
+        state: present
+        mode: '0440'
+        create: yes
+        validate: 'visudo -cf %s'

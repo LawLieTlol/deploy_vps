@@ -1,0 +1,72 @@
+---
+- name: Установка Wireguard в Docker
+  hosts: all
+  become: true
+  tasks:
+    - name: Создание директории для данных Wireguard
+      file:
+        path: "{{ wireguard_config_dir }}"
+        state: directory
+        owner: "{{ wireguard_user }}"
+        group: "{{ wireguard_user }}"
+        mode: '0755'
+
+    - name: "Получение UID и GID для пользователя {{ wireguard_user }}"
+      command:
+        cmd: "id -u {{ wireguard_user }}"
+      register: wireguard_user_uid
+
+    - name: Запуск контейнера Wireguard
+      docker_container:
+        name: wireguard
+        image: linuxserver/wireguard
+        restart_policy: unless-stopped
+        ports:
+          - "{{ wireguard_port }}:51820/udp"
+        env:
+          PUID: "{{ wireguard_user_uid.stdout }}"
+          PGID: "{{ wireguard_user_uid.stdout }}"
+          TZ: "Europe/Moscow"
+          ALLOWEDIPS: "0.0.0.0/0"
+          PEERS: "{{ wireguard_peers | join(',') }}"
+          PEERDNS: "{{ wireguard_dns | join(',') }}"
+          INTERNAL_SUBNET: "{{ wireguard_internal_subnet }}"
+        volumes:
+          - "{{ wireguard_config_dir }}:/config"
+        capabilities:
+          - NET_ADMIN
+          - SYS_MODULE
+        sysctls:
+          net.ipv4.conf.all.src_valid_mark: 1
+        state: started
+      ignore_errors: true
+      register: docker_container_result
+
+    - name: Ожидание создания конфигурационных файлов
+      wait_for:
+        path: "{{ wireguard_config_dir }}/peer_{{ item }}/peer_{{ item }}.conf"
+        state: present
+        timeout: 10
+      loop: "{{ wireguard_peers }}"
+
+    - name: Создание локальной директории для конфигов
+      delegate_to: localhost
+      file:
+        path: "{{ wireguard_local_dir}}"
+        state: directory
+        mode: '0755'
+      become: false
+
+    - name: Копирование конфигурационных файлов на Ansible хост
+      fetch:
+        src: "{{ wireguard_config_dir }}/peer_{{ item }}/peer_{{ item }}.conf"
+        dest: "{{ wireguard_local_dir}}/"
+        flat: yes
+      loop: "{{ wireguard_peers }}"
+
+    - name: Копирование QR-кодов на Ansible хост
+      fetch:
+        src: "{{ wireguard_config_dir }}/peer_{{ item }}/peer_{{ item }}.png"
+        dest: "{{ wireguard_local_dir}}/"
+        flat: yes
+      loop: "{{ wireguard_peers }}"

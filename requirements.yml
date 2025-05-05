@@ -1,0 +1,5 @@
+---
+- src: geerlingguy.docker
+- src: geerlingguy.security
+- src: geerlingguy.node_exporter
+- src: geerlingguy.firewall

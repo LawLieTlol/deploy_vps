@@ -1,0 +1,30 @@
+---
+- name: "Импорт плейбука для создания пользователей"
+  import_playbook: create_users.yml
+  tags: 
+    - users
+    - all
+
+- name: "Импорт плейбука для обновления ОС"
+  import_playbook: system_update.yml
+  tags:
+    - system_update
+    - all
+
+- name: "Импорт плейбука для установки зависимостей"
+  import_playbook: prepare_server.yml
+  tags: 
+    - prepare
+    - all
+
+- name: "Импорт плейбука для настройки Wireguard"
+  import_playbook: wireguard.yml
+  tags:
+    - wireguard
+    - all
+
+- name: "Импорт плейбука пост-установки"
+  import_playbook: post_install.yml
+  tags:
+    - post_install
+    - all

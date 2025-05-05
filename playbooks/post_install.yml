@@ -1,0 +1,12 @@
+- name: "Перезагрузка сервера если необходимо"
+  hosts: vps
+  become: true
+  tasks:
+    - name: Проверка на необходимость перезагрузки сервера
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+    - name: Перезагрузка сервера
+      reboot:
+        msg: Rebooting due to a kernel update
+      when: reboot_required_file.stat.exists == true

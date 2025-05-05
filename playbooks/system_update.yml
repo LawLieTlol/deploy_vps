@@ -1,0 +1,8 @@
+- name: "Обновление ОС"
+  hosts: vps
+  become: true
+  tasks:
+    - name: "Обновление всех пакетов"
+      apt:
+        update_cache: yes
+        state: latest

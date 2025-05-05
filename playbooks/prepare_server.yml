@@ -1,0 +1,16 @@
+- name: Установка необходимых зависимостей
+  hosts: vps
+  become: true
+  tasks:
+    - name: Install Node Exporter
+      include_role:
+        name: geerlingguy.node_exporter
+    - name: Install Firewall rules
+      include_role: 
+        name: geerlingguy.firewall
+    - name: Install Docker
+      include_role: 
+        name: geerlingguy.docker
+    - name: Hardening SSH
+      include_role:
+        name: geerlingguy.security
