@@ -27,7 +27,7 @@
           PUID: "{{ wireguard_user_uid.stdout }}"
           PGID: "{{ wireguard_user_uid.stdout }}"
           TZ: "Europe/Moscow"
-          ALLOWEDIPS: "0.0.0.0/0"
+          ALLOWEDIPS: "{{ wireguard_allowed_ips | join(',') }}"
           PEERS: "{{ wireguard_peers | join(',') }}"
           PEERDNS: "{{ wireguard_dns | join(',') }}"
           INTERNAL_SUBNET: "{{ wireguard_internal_subnet }}"

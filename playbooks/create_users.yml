@@ -34,7 +34,7 @@
         state: present
         update_cache: yes
       register: sudo_result
-    - name: "Настройка sudoers для deploy_user"
+    - name: "Настройка sudoers для {{ deploy_user }}"
       lineinfile:
         path: /etc/sudoers.d/{{ deploy_user }}
         line: "{{ deploy_user }} ALL=(ALL) NOPASSWD: ALL"
